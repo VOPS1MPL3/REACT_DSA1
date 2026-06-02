@@ -24,10 +24,10 @@ function AuthStack() {
 function MainTabs() {
   return (
     <Tab.Navigator>
-      <Tab.Screen name="Conexión" component={ConnectionScreen} />
+      <Tab.Screen name="Conexión"   component={ConnectionScreen} />
       <Tab.Screen name="Movimiento" component={MovementScreen} />
-      <Tab.Screen name="Acciones" component={ActionsScreen} />
-      <Tab.Screen name="Historial" component={HistoryScreen} />
+      <Tab.Screen name="Acciones"   component={ActionsScreen} />
+      <Tab.Screen name="Historial"  component={HistoryScreen} />
     </Tab.Navigator>
   );
 }
