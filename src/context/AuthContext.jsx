@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import { setupInterceptors } from '../services/api';
+import { setupInterceptors, authService } from '../services/api';
+import { SKIP_LOGIN, DEMO_USER } from '../config/constants';
 
 export const AuthContext = createContext(null);
 
@@ -13,8 +14,19 @@ export function AuthProvider({ children }) {
       try {
         const token = await SecureStore.getItemAsync('token');
         const raw   = await SecureStore.getItemAsync('user');
-        if (token && raw) setUser({ ...JSON.parse(raw), token });
-      } catch (_) {}
+        if (token && raw) {
+          setUser({ ...JSON.parse(raw), token });
+        } else if (SKIP_LOGIN) {
+          // Bypass demo: login automático para saltar la pantalla pero tener token real.
+          const res = await authService.login(DEMO_USER.identifier, DEMO_USER.password);
+          const access = res.data.access_token;
+          await SecureStore.setItemAsync('token', access);
+          await SecureStore.setItemAsync('user', JSON.stringify({ username: DEMO_USER.identifier }));
+          setUser({ username: DEMO_USER.identifier, token: access });
+        }
+      } catch (_) {
+        // si el auto-login falla (backend caído, etc.), queda en null y se muestra el Login normal
+      }
       setLoading(false);
     })();
   }, []);
