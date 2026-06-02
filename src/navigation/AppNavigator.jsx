@@ -8,6 +8,7 @@ import { ConnectionScreen } from '../screens/ConnectionScreen';
 import { MovementScreen } from '../screens/MovementScreen';
 import { ActionsScreen } from '../screens/ActionsScreen';
 import { HistoryScreen } from '../screens/HistoryScreen';
+import { ConnectionBadge } from '../components/ConnectionBadge';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -23,7 +24,11 @@ function AuthStack() {
 
 function MainTabs() {
   return (
-    <Tab.Navigator>
+    <Tab.Navigator
+      screenOptions={{
+        headerRight: () => <ConnectionBadge />,
+      }}
+    >
       <Tab.Screen name="Conexión" component={ConnectionScreen} />
       <Tab.Screen name="Movimiento" component={MovementScreen} />
       <Tab.Screen name="Acciones" component={ActionsScreen} />
