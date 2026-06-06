@@ -36,8 +36,8 @@ function Joystick({ onMove, onRelease, disabled }) {
   const startSending = useCallback((dx, dy) => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = setInterval(() => {
-      const vx = clamp(-dy / JOYSTICK_RADIUS, -1, 1);
-      const vy = clamp(-dx / JOYSTICK_RADIUS, -1, 1);
+      const vx = clamp(-dy / JOYSTICK_RADIUS, -1, 1) * 0.2;
+      const vy = clamp(-dx / JOYSTICK_RADIUS, -1, 1) * 0.2;
       onMove(parseFloat(vx.toFixed(2)), parseFloat(vy.toFixed(2)), 0);
     }, 150);
   }, [onMove]);

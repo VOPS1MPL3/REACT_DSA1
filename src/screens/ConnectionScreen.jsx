@@ -7,9 +7,10 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
-  SafeAreaView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRobot } from '../hooks/useRobot';
+import { useAuth } from '../hooks/useAuth';
 import { ROBOT_TYPES } from '../config/constants';
 
 const STATE_UI = {
@@ -21,6 +22,7 @@ const STATE_UI = {
 };
 
 export function ConnectionScreen() {
+  const { logout } = useAuth();
   const {
     connectionState,
     statusData,
@@ -46,6 +48,13 @@ export function ConnectionScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
+        {/* Header con botón de cerrar sesión */}
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 16 }}>
+          <TouchableOpacity onPress={logout} style={{ padding: 8, backgroundColor: '#ffebe6', borderRadius: 6 }}>
+            <Text style={{ color: '#d93025', fontWeight: 'bold', fontSize: 12 }}>Cerrar Sesión</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Indicador de estado */}
         <View style={[styles.statusCard, { borderColor: ui.color }]}>
           <View style={styles.statusRow}>
