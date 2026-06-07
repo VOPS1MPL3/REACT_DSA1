@@ -1,3 +1,4 @@
+import { TouchableOpacity, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -22,8 +23,18 @@ function AuthStack() {
 }
 
 function MainTabs() {
+  const { logout } = useAuth();
+
   return (
-    <Tab.Navigator>
+    <Tab.Navigator
+      screenOptions={{
+        headerRight: () => (
+          <TouchableOpacity onPress={logout} style={{ marginRight: 16 }}>
+            <Text style={{ color: 'red' }}>Cerrar sesión</Text>
+          </TouchableOpacity>
+        ),
+      }}
+    >
       <Tab.Screen name="Conexión" component={ConnectionScreen} />
       <Tab.Screen name="Movimiento" component={MovementScreen} />
       <Tab.Screen name="Acciones" component={ActionsScreen} />
