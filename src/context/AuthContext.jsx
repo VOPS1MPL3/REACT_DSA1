@@ -24,8 +24,11 @@ export function AuthProvider({ children }) {
           await SecureStore.setItemAsync('user', JSON.stringify({ username: DEMO_USER.identifier }));
           setUser({ username: DEMO_USER.identifier, token: access });
         }
-      } catch (_) {
-        // si el auto-login falla (backend caído, etc.), queda en null y se muestra el Login normal
+      } catch (err) {
+        if (SKIP_LOGIN) {
+          console.log("Auto-login ignorado por red. Entrando offline al joystick...");
+          setUser({ username: DEMO_USER.identifier, token: 'mock-offline-token' });
+        }
       }
       setLoading(false);
     })();
