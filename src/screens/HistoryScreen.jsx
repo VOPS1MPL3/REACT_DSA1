@@ -33,9 +33,16 @@ export function HistoryScreen() {
                     { backgroundColor: item.success ? '#1e8e3e' : '#d93025' },
                   ]}
                 />
-                <Text style={styles.historyAction} numberOfLines={1}>
-                  {item.action}
-                </Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.historyAction} numberOfLines={1}>
+                    {item.action}
+                  </Text>
+                  {item.robotType && (
+                    <Text style={styles.historyRobotType}>
+                      Robot: {item.robotType}
+                    </Text>
+                  )}
+                </View>
                 <Text style={[styles.historyStatus, { color: item.success ? '#1e8e3e' : '#d93025' }]}>
                   {item.success ? 'Exitosa' : 'Falló'}
                 </Text>
@@ -58,7 +65,8 @@ const styles = StyleSheet.create({
   historyRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 8 },
   historyDivider: { borderTopWidth: 1, borderTopColor: '#f0f0f0' },
   historyDot: { width: 8, height: 8, borderRadius: 4, marginRight: 10 },
-  historyAction: { flex: 1, fontSize: 14, color: '#222', fontWeight: '600' },
+  historyAction: { fontSize: 14, color: '#222', fontWeight: '600' },
+  historyRobotType: { fontSize: 11, color: '#666', marginTop: 2 },
   historyStatus: { fontSize: 12, fontWeight: '700', marginRight: 4, textTransform: 'uppercase' },
   historyTime: { fontSize: 12, color: '#999', marginLeft: 8 },
 });

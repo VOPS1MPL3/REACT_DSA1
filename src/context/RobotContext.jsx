@@ -59,7 +59,7 @@ export function RobotProvider({ children }) {
   const addToHistory = useCallback((action, success) => {
     setCommandHistory((prev) => {
       const newHistory = [
-        { action, success, timestamp: new Date().toISOString() },
+        { action, success, robotType, timestamp: new Date().toISOString() },
         ...prev,
       ];
       if (user?.username) {
@@ -67,7 +67,7 @@ export function RobotProvider({ children }) {
       }
       return newHistory;
     });
-  }, [user?.username]);
+  }, [user?.username, robotType]);
 
   const refreshStatus = useCallback(async () => {
     try {
