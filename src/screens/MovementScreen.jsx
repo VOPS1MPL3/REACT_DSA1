@@ -10,7 +10,7 @@ import {
   ScrollView,
   StatusBar,
 } from 'react-native';
-import { motionService } from '../services/api';
+import { motionService, actionService } from '../services/api';
 import { useRobot } from '../hooks/useRobot';
 
 const JOYSTICK_RADIUS = 70;
@@ -30,21 +30,30 @@ function Toast({ message, type }) {
 function Joystick({ onMove, onRelease, disabled }) {
   const [knobOffset, setKnobOffset] = useState({ x: 0, y: 0 });
   const intervalRef = useRef(null);
+  const latestPos = useRef({ dx: 0, dy: 0 });
+  const isSending = useRef(false);
 
   const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
 
-  const startSending = useCallback((dx, dy) => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
+  const startSending = useCallback(() => {
+    if (intervalRef.current) return;
     intervalRef.current = setInterval(() => {
+      if (isSending.current) return;
+      isSending.current = true;
+      const { dx, dy } = latestPos.current;
       const vx = clamp(-dy / JOYSTICK_RADIUS, -1, 1) * 0.2;
       const vy = clamp(-dx / JOYSTICK_RADIUS, -1, 1) * 0.2;
-      onMove(parseFloat(vx.toFixed(2)), parseFloat(vy.toFixed(2)), 0);
+      onMove(parseFloat(vx.toFixed(2)), parseFloat(vy.toFixed(2)), 0).finally(() => {
+        isSending.current = false;
+      });
     }, 150);
   }, [onMove]);
 
   const stopSending = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     intervalRef.current = null;
+    isSending.current = false;
+    latestPos.current = { dx: 0, dy: 0 };
     onRelease();
   }, [onRelease]);
 
@@ -59,7 +68,8 @@ function Joystick({ onMove, onRelease, disabled }) {
         const dx = gesture.dx * scale;
         const dy = gesture.dy * scale;
         setKnobOffset({ x: dx, y: dy });
-        startSending(dx, dy);
+        latestPos.current = { dx, dy };
+        startSending();
       },
       onPanResponderRelease: () => {
         setKnobOffset({ x: 0, y: 0 });
@@ -155,6 +165,16 @@ export function MovementScreen() {
     setLoadingBtn(key);
     try {
       await apiFn();
+      
+      // Si el comando es pararse o detenerse, llamamos a balance_stand para evitar que quede bloqueado
+      if (key === 'standup' || key === 'stop' || key === 'stop2') {
+        try {
+          await actionService.execute('balance_stand');
+        } catch (err) {
+          console.log('balance_stand omitido o no soportado:', err);
+        }
+      }
+
       addToHistory(label, true);
       showToast(label, 'success');
     } catch (e) {
@@ -166,16 +186,29 @@ export function MovementScreen() {
     }
   };
 
+  const isJoystickActive = useRef(false);
+
   const handleMove = async (vx, vy, vyaw) => {
     try {
       await motionService.move(vx, vy, vyaw);
+      if (!isJoystickActive.current) {
+        isJoystickActive.current = true;
+        addToHistory('Mover (Joystick)', true);
+      }
     } catch (e) {
       showToast('Error al mover', 'error');
+      if (!isJoystickActive.current) {
+        isJoystickActive.current = true;
+        addToHistory('Mover (Joystick)', false);
+      }
     }
   };
 
   const handleJoystickRelease = () => {
-    motionService.stop().catch(() => {});
+    isJoystickActive.current = false;
+    motionService.stop()
+      .then(() => actionService.execute('balance_stand').catch(() => {}))
+      .catch(() => {});
   };
 
   return (
