@@ -1,14 +1,18 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, SafeAreaView } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
+import { useBiometric } from '../hooks/useBiometric';
 import { authService } from '../services/api';
 
 export function LoginScreen({ navigation }) {
   const { login } = useAuth();
+  const { available: biometricAvailable, authenticate } = useBiometric();
+
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [biometricLoading, setBiometricLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!identifier || !password) {
@@ -28,41 +32,71 @@ export function LoginScreen({ navigation }) {
     }
   };
 
-return (
-  <SafeAreaView style={styles.container}>
-    <Text style={styles.title}>Unitree Control</Text>
-
-    <TextInput
-      style={styles.input}
-      placeholder="Email o usuario"
-      value={identifier}
-      onChangeText={setIdentifier}
-      autoCapitalize="none"
-      keyboardType="email-address"
-    />
-
-    <TextInput
-      style={styles.input}
-      placeholder="Contraseña"
-      value={password}
-      onChangeText={setPassword}
-      secureTextEntry
-    />
-
-    {error ? <Text style={styles.error}>{error}</Text> : null}
-
-    <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-      {loading
-        ? <ActivityIndicator color="#fff" />
-        : <Text style={styles.buttonText}>Iniciar sesión</Text>
+  const handleBiometric = async () => {
+    try {
+      setBiometricLoading(true);
+      setError('');
+      const result = await authenticate();
+      if (result) {
+        await login(result.token, result.userData);
+      } else {
+        setError('Autenticación biométrica fallida');
       }
-    </TouchableOpacity>
+    } catch {
+      setError('Error al autenticar con biometría');
+    } finally {
+      setBiometricLoading(false);
+    }
+  };
 
-    <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-      <Text style={styles.link}>¿No tenés cuenta? Registrate</Text>
-    </TouchableOpacity>
-  </SafeAreaView>
-);
+  return (
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.title}>Unitree Control</Text>
+
+      <TextInput
+        style={styles.input}
+        placeholder="Email o usuario"
+        value={identifier}
+        onChangeText={setIdentifier}
+        autoCapitalize="none"
+        keyboardType="email-address"
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Contraseña"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
+
+      {error ? <Text style={styles.error}>{error}</Text> : null}
+
+      <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading || biometricLoading}>
+        {loading
+          ? <ActivityIndicator color="#fff" />
+          : <Text style={styles.buttonText}>Iniciar sesión</Text>
+        }
+      </TouchableOpacity>
+
+      {biometricAvailable && (
+        <TouchableOpacity
+          style={styles.biometricButton}
+          onPress={handleBiometric}
+          disabled={loading || biometricLoading}
+        >
+          {biometricLoading
+            ? <ActivityIndicator color="#000" />
+            : <Text style={styles.biometricButtonText}>🔑 Ingresar con huella</Text>
+          }
+        </TouchableOpacity>
+      )}
+
+      <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+        <Text style={styles.link}>¿No tenés cuenta? Registrate</Text>
+      </TouchableOpacity>
+    </SafeAreaView>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -96,12 +130,25 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 8,
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   buttonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  biometricButton: {
+    borderWidth: 1,
+    borderColor: '#000',
+    padding: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  biometricButtonText: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: '600',
   },
   link: {
     textAlign: 'center',
