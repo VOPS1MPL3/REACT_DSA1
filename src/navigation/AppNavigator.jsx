@@ -2,6 +2,7 @@ import { TouchableOpacity, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '../hooks/useAuth';
 import { LoginScreen } from '../screens/LoginScreen';
 import { RegisterScreen } from '../screens/RegisterScreen';
@@ -27,7 +28,25 @@ function MainTabs() {
   const { logout } = useAuth();
   return (
     <Tab.Navigator
-      screenOptions={{
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          if (route.name === 'Conexión') {
+            const iconName = focused ? 'power-plug' : 'power-plug-outline';
+            return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
+          }
+
+          let iconName;
+          if (route.name === 'Movimiento') {
+            iconName = focused ? 'game-controller' : 'game-controller-outline';
+          } else if (route.name === 'Acciones') {
+            iconName = focused ? 'flash' : 'flash-outline';
+          } else if (route.name === 'Historial') {
+            iconName = focused ? 'time' : 'time-outline';
+          }
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#1e6fd9',
+        tabBarInactiveTintColor: 'gray',
         headerRight: () => (
           <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16, gap: 12 }}>
             <ConnectionBadge />
@@ -36,7 +55,7 @@ function MainTabs() {
             </TouchableOpacity>
           </View>
         ),
-      }}
+      })}
     >
       <Tab.Screen name="Conexión"   component={ConnectionScreen} />
       <Tab.Screen name="Movimiento" component={MovementScreen} />
