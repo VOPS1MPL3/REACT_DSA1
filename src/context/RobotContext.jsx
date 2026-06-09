@@ -1,4 +1,6 @@
-import { createContext, useState, useEffect, useRef, useCallback } from 'react';
+import { createContext, useState, useEffect, useRef, useCallback, useContext } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AuthContext } from './AuthContext';
 import { connectionService } from '../services/api';
 import {
   DEFAULT_NETWORK_INTERFACE,
@@ -19,6 +21,7 @@ function isConnectedStatus(s) {
 }
 
 export function RobotProvider({ children }) {
+  const { user } = useContext(AuthContext);
   // connectionState (cliente): disconnected | connecting | connected | reconnecting | error
   const [connectionState, setConnectionState] = useState('disconnected');
   const [robotType, setRobotType] = useState('go2');
@@ -31,13 +34,40 @@ export function RobotProvider({ children }) {
   const busyRef = useRef(false);       // evita pisar requests del polling
   const lastParamsRef = useRef(null);  // params del último connect exitoso
 
+  // Cargar historial cuando el usuario cambia
+  useEffect(() => {
+    if (!user?.username) {
+      setCommandHistory([]);
+      return;
+    }
+    const loadHistory = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(`history_${user.username}`);
+        if (stored) {
+          setCommandHistory(JSON.parse(stored));
+        } else {
+          setCommandHistory([]);
+        }
+      } catch (e) {
+        console.log('Error loading history', e);
+      }
+    };
+    loadHistory();
+  }, [user?.username]);
+
   // Para puntos 2 y 5: registrar un comando enviado al robot.
   const addToHistory = useCallback((action, success) => {
-    setCommandHistory((prev) => [
-      { action, success, timestamp: new Date().toISOString() },
-      ...prev.slice(0, 49),
-    ]);
-  }, []);
+    setCommandHistory((prev) => {
+      const newHistory = [
+        { action, success, timestamp: new Date().toISOString() },
+        ...prev,
+      ];
+      if (user?.username) {
+        AsyncStorage.setItem(`history_${user.username}`, JSON.stringify(newHistory)).catch(e => console.log('Error saving history', e));
+      }
+      return newHistory;
+    });
+  }, [user?.username]);
 
   const refreshStatus = useCallback(async () => {
     try {
