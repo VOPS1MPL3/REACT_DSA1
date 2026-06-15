@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect } from 'react';
 import * as SecureStore from 'expo-secure-store';
+import * as LocalAuthentication from 'expo-local-authentication';
 import { setupInterceptors, authService } from '../services/api';
 import { SKIP_LOGIN, DEMO_USER } from '../config/constants';
 
@@ -15,7 +16,22 @@ export function AuthProvider({ children }) {
         const token = await SecureStore.getItemAsync('token');
         const raw   = await SecureStore.getItemAsync('user');
         if (token && raw) {
-          setUser({ ...JSON.parse(raw), token });
+          const hardware = await LocalAuthentication.hasHardwareAsync();
+          const enrolled = await LocalAuthentication.isEnrolledAsync();
+          
+          if (hardware && enrolled) {
+            const authResult = await LocalAuthentication.authenticateAsync({
+              promptMessage: 'Confirmá tu identidad',
+              fallbackLabel: 'Usar contraseña',
+              cancelLabel: 'Cancelar',
+            });
+            
+            if (authResult.success) {
+              setUser({ ...JSON.parse(raw), token });
+            }
+          } else {
+            setUser({ ...JSON.parse(raw), token });
+          }
         } else if (SKIP_LOGIN) {
           // Bypass demo: login automático para saltar la pantalla pero tener token real.
           const res = await authService.login(DEMO_USER.identifier, DEMO_USER.password);

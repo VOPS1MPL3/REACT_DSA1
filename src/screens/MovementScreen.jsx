@@ -166,8 +166,8 @@ export function MovementScreen() {
     try {
       await apiFn();
       
-      // Si el comando es pararse o detenerse, llamamos a balance_stand para evitar que quede bloqueado
-      if (key === 'standup' || key === 'stop' || key === 'stop2') {
+      // Si el comando es pararse, llamamos a balance_stand
+      if (key === 'standup') {
         try {
           await actionService.execute('balance_stand');
         } catch (err) {
@@ -207,7 +207,6 @@ export function MovementScreen() {
   const handleJoystickRelease = () => {
     isJoystickActive.current = false;
     motionService.stop()
-      .then(() => actionService.execute('balance_stand').catch(() => {}))
       .catch(() => {});
   };
 
