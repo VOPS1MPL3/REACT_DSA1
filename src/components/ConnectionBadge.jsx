@@ -1,7 +1,6 @@
 import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRobot } from '../hooks/useRobot';
 
-// Mapa de estado -> etiqueta + color (mismo criterio visual que la pantalla de Conexión).
 const STATE_UI = {
   disconnected: { label: 'Desconectado',  color: '#9aa0a6' },
   connecting:   { label: 'Conectando…',   color: '#1e6fd9' },
@@ -10,8 +9,6 @@ const STATE_UI = {
   error:        { label: 'Error',         color: '#d93025' },
 };
 
-// Indicador global de conexión para mostrar en el header de todas las pantallas (punto 4).
-// Lee el estado desde RobotContext, así se mantiene sincronizado en cualquier pantalla.
 export function ConnectionBadge() {
   const { connectionState } = useRobot();
   const ui = STATE_UI[connectionState] || STATE_UI.disconnected;

@@ -12,13 +12,10 @@ import { useRobot } from '../hooks/useRobot';
 import { actionService } from '../services/api';
 import { ROBOT_TYPES } from '../config/constants';
 
-// Mismo criterio de mensaje de error que RobotContext (la API responde { error, detail }).
 function errMsg(e, fallback) {
   return e?.response?.data?.error || e?.response?.data?.detail || e?.message || fallback;
 }
 
-// GET /actions puede venir como ["dance", ...], { actions: [...] } o [{ name }, ...].
-// Normalizamos siempre a un array de strings con el nombre de la acción.
 function normalizeActions(data) {
   const arr = Array.isArray(data)
     ? data
@@ -47,7 +44,6 @@ export function ActionsScreen() {
     [robotType]
   );
 
-  // GET /actions — carga la lista de acciones disponibles.
   const loadActions = useCallback(async () => {
     setLoading(true);
     setLoadError(null);
@@ -62,7 +58,6 @@ export function ActionsScreen() {
     }
   }, []);
 
-  // Al conectar el robot, cargar las acciones. Al desconectar, limpiar.
   useEffect(() => {
     if (isConnected) {
       loadActions();
@@ -72,7 +67,6 @@ export function ActionsScreen() {
     }
   }, [isConnected, loadActions]);
 
-  // POST /action/{nombre} — ejecuta una acción y registra el resultado en el historial.
   const handleExecute = useCallback(
     async (name) => {
       if (!isConnected || executing) return;
@@ -89,7 +83,6 @@ export function ActionsScreen() {
     [isConnected, executing, addToHistory]
   );
 
-  // No conectado: la pantalla queda deshabilitada (habilitada solo si el robot está conectado).
   if (!isConnected) {
     return (
       <SafeAreaView style={styles.safe}>
@@ -181,7 +174,6 @@ const styles = StyleSheet.create({
   refresh: { fontSize: 13, fontWeight: '700', marginBottom: 10 },
   muted: { opacity: 0.4 },
 
-  // Aviso de robot desconectado
   notice: {
     borderWidth: 1.5,
     borderColor: '#e0e0e0',
@@ -195,13 +187,11 @@ const styles = StyleSheet.create({
   noticeText: { fontSize: 13, color: '#888', textAlign: 'center', lineHeight: 19 },
 
 
-  // Estados de carga / error / vacío
   loader: { marginVertical: 24 },
   errorBox: { alignItems: 'center', marginVertical: 16 },
   errorText: { color: '#d93025', fontSize: 13, marginBottom: 8, textAlign: 'center' },
   empty: { color: '#888', fontSize: 13, marginBottom: 24 },
 
-  // Grilla de acciones
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 28 },
   actionCard: {
     width: '47%',
