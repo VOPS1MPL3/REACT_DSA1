@@ -16,7 +16,6 @@ import { useRobot } from '../hooks/useRobot';
 const JOYSTICK_RADIUS = 70;
 const KNOB_RADIUS = 28;
 
-// ─── Feedback Toast ───────────────────────────────────────────────────────────
 function Toast({ message, type }) {
   if (!message) return null;
   return (
@@ -26,7 +25,6 @@ function Toast({ message, type }) {
   );
 }
 
-// ─── Joystick ─────────────────────────────────────────────────────────────────
 function Joystick({ onMove, onRelease, disabled }) {
   const [knobOffset, setKnobOffset] = useState({ x: 0, y: 0 });
   const intervalRef = useRef(null);
@@ -103,7 +101,6 @@ function Joystick({ onMove, onRelease, disabled }) {
   );
 }
 
-// ─── Direction Button ─────────────────────────────────────────────────────────
 function DirButton({ label, icon, onPress, disabled, loading }) {
   return (
     <TouchableOpacity
@@ -124,7 +121,6 @@ function DirButton({ label, icon, onPress, disabled, loading }) {
   );
 }
 
-// ─── Action Button ────────────────────────────────────────────────────────────
 function ActionButton({ label, icon, onPress, disabled, loading, color }) {
   return (
     <TouchableOpacity
@@ -145,9 +141,7 @@ function ActionButton({ label, icon, onPress, disabled, loading, color }) {
   );
 }
 
-// ─── Main Screen ──────────────────────────────────────────────────────────────
 export function MovementScreen() {
-  // Integrado con RobotContext del punto 1
   const { isConnected, addToHistory } = useRobot();
 
   const [toast, setToast] = useState({ message: '', type: '' });
@@ -166,7 +160,6 @@ export function MovementScreen() {
     try {
       await apiFn();
       
-      // Si el comando es pararse, llamamos a balance_stand
       if (key === 'standup') {
         try {
           await actionService.execute('balance_stand');
@@ -325,7 +318,6 @@ export function MovementScreen() {
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0A0E1A' },
   header: {

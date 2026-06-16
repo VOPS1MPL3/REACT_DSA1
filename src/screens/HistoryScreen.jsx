@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView } from 'react-native';
 import { useRobot } from '../hooks/useRobot';
 
-// Timestamp ISO del historial -> "HH:MM:SS" legible.
 function formatTime(iso) {
   try {
     return new Date(iso).toLocaleTimeString();
