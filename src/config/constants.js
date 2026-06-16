@@ -2,7 +2,7 @@
 //export const BASE_URL = 'http://192.168.0.128:8000';
 //export const BASE_URL = 'http://10.128.48.107:8000'; // IP Actual (Red de celular)
 //export const BASE_URL = 'http://192.168.137.78:8000';
-export const BASE_URL = 'http://192.168.137.78:8000';
+export const BASE_URL = 'http://192.168.1.44:8000';
 // Interfaz de red por defecto
 
 // Tipos de robot disponibles (selector + diferenciación visual)

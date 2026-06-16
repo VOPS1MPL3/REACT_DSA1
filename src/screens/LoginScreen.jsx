@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, SafeAreaView } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useBiometric } from '../hooks/useBiometric';
-import { authService } from '../services/api';
+import { authService, connectionService } from '../services/api';
 
 export function LoginScreen({ navigation }) {
   const { login } = useAuth();
@@ -13,6 +13,18 @@ export function LoginScreen({ navigation }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [biometricLoading, setBiometricLoading] = useState(false);
+  const [pingStatus, setPingStatus] = useState(null);
+
+  const handlePing = async () => {
+    setPingStatus('loading');
+    try {
+      await connectionService.ping();
+      setPingStatus('success');
+      setTimeout(() => setPingStatus(null), 3000);
+    } catch (e) {
+      setPingStatus('error');
+    }
+  };
 
   const handleLogin = async () => {
     if (!identifier || !password) {
@@ -95,6 +107,17 @@ export function LoginScreen({ navigation }) {
       <TouchableOpacity onPress={() => navigation.navigate('Register')}>
         <Text style={styles.link}>¿No tenés cuenta? Registrate</Text>
       </TouchableOpacity>
+
+      <View style={styles.pingContainer}>
+        <TouchableOpacity style={styles.pingButton} onPress={handlePing} disabled={pingStatus === 'loading'}>
+          <Text style={styles.pingText}>Verificar conexión (Ping)</Text>
+        </TouchableOpacity>
+        <View style={styles.pingResult}>
+          {pingStatus === 'loading' && <ActivityIndicator size="small" color="#666" />}
+          {pingStatus === 'success' && <Text style={{ color: '#1e8e3e', fontWeight: 'bold' }}>Servidor conectado ✅</Text>}
+          {pingStatus === 'error' && <Text style={{ color: '#d93025', fontWeight: 'bold' }}>Error de conexión ❌</Text>}
+        </View>
+      </View>
     </SafeAreaView>
   );
 }
@@ -154,5 +177,28 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#555',
     fontSize: 14,
+  },
+  pingContainer: {
+    marginTop: 40,
+    alignItems: 'center',
+  },
+  pingButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    backgroundColor: '#f8f9fa',
+  },
+  pingText: {
+    color: '#444',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  pingResult: {
+    marginTop: 12,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

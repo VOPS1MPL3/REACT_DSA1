@@ -8,6 +8,12 @@ export const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+// Logger global para todas las peticiones
+api.interceptors.request.use((config) => {
+  console.log(`[Request] ${config.method?.toUpperCase()} ${config.baseURL || ''}${config.url}`);
+  return config;
+});
+
 export function setupInterceptors(logoutFn) {
   api.interceptors.request.use(async (config) => {
     const token = await SecureStore.getItemAsync('token');
@@ -41,6 +47,7 @@ export const connectionService = {
     api.post('/connect', { robot_type, network_interface }),
   disconnect: () => api.post('/disconnect'),
   status: () => api.get('/status'),
+  ping: () => api.get('/ping'),
 };
 
 // Movimiento
