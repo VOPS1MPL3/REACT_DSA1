@@ -33,7 +33,6 @@ export function setupInterceptors(logoutFn) {
   );
 }
 
-// Auth
 export const authService = {
   login: (identifier, password) =>
     api.post('/auth/token', { identifier, password }),
@@ -41,7 +40,6 @@ export const authService = {
     api.post('/auth/register', { username, email, password }),
 };
 
-// Conexión
 export const connectionService = {
   connect: (robot_type, network_interface) =>
     api.post('/connect', { robot_type, network_interface }),
@@ -50,7 +48,6 @@ export const connectionService = {
   ping: () => api.get('/ping'),
 };
 
-// Movimiento
 export const motionService = {
   move:    (vx, vy, vyaw)      => api.post('/move', { vx, vy, vyaw }),
   stop:    ()                  => api.post('/stop'),
@@ -59,7 +56,6 @@ export const motionService = {
   toggle:  (endpoint, enable)  => api.post(`/${endpoint}`, { enable }),
 };
 
-// Acciones
 export const actionService = {
   list:    ()     => api.get('/actions'),
   execute: (name) => api.post(`/action/${name}`),
