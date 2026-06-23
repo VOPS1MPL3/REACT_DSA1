@@ -1,8 +1,4 @@
-// URL del servidor — cambiar por la IP del laboratorio
-//export const BASE_URL = 'http://192.168.0.128:8000';
-//export const BASE_URL = 'http://10.128.48.107:8000'; // IP Actual (Red de celular)
-//export const BASE_URL = 'http://192.168.137.78:8000';
-export const BASE_URL = 'http://192.168.137.78:8000';
+export const BASE_URL = 'http://192.168.1.44:8000';
 
 export const ROBOT_TYPES = [
   { id: 'go2', label: 'Go2', subtitle: 'Cuadrúpedo', emoji: '🐕', color: '#1e6fd9' },

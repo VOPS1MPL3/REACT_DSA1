@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { motionService, actionService } from '../services/api';
 import { useRobot } from '../hooks/useRobot';
+import { VirtualJoystick } from '../components/VirtualJoystick';
 
 const JOYSTICK_RADIUS = 70;
 const KNOB_RADIUS = 28;
@@ -25,92 +26,16 @@ function Toast({ message, type }) {
   );
 }
 
-function Joystick({ onMove, onRelease, disabled }) {
-  const [knobOffset, setKnobOffset] = useState({ x: 0, y: 0 });
-  const intervalRef = useRef(null);
-  const latestPos = useRef({ dx: 0, dy: 0 });
-  const isSending = useRef(false);
-
-  const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
-
-  const startSending = useCallback(() => {
-    if (intervalRef.current) return;
-    intervalRef.current = setInterval(() => {
-      if (isSending.current) return;
-      isSending.current = true;
-      const { dx, dy } = latestPos.current;
-      const vx = clamp(-dy / JOYSTICK_RADIUS, -1, 1) * 0.2;
-      const vy = clamp(-dx / JOYSTICK_RADIUS, -1, 1) * 0.2;
-      onMove(parseFloat(vx.toFixed(2)), parseFloat(vy.toFixed(2)), 0).finally(() => {
-        isSending.current = false;
-      });
-    }, 150);
-  }, [onMove]);
-
-  const stopSending = useCallback(() => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = null;
-    isSending.current = false;
-    latestPos.current = { dx: 0, dy: 0 };
-    onRelease();
-  }, [onRelease]);
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => !disabled,
-      onMoveShouldSetPanResponder: () => !disabled,
-      onPanResponderGrant: () => {},
-      onPanResponderMove: (_, gesture) => {
-        const dist = Math.sqrt(gesture.dx ** 2 + gesture.dy ** 2);
-        const scale = dist > JOYSTICK_RADIUS ? JOYSTICK_RADIUS / dist : 1;
-        const dx = gesture.dx * scale;
-        const dy = gesture.dy * scale;
-        setKnobOffset({ x: dx, y: dy });
-        latestPos.current = { dx, dy };
-        startSending();
-      },
-      onPanResponderRelease: () => {
-        setKnobOffset({ x: 0, y: 0 });
-        stopSending();
-      },
-      onPanResponderTerminate: () => {
-        setKnobOffset({ x: 0, y: 0 });
-        stopSending();
-      },
-    })
-  ).current;
-
-  return (
-    <View style={styles.joystickWrapper}>
-      <Text style={styles.joystickLabel}>JOYSTICK</Text>
-      <View
-        style={[styles.joystickBase, disabled && styles.disabledOverlay]}
-        {...panResponder.panHandlers}
-      >
-        <View style={styles.joystickLineH} />
-        <View style={styles.joystickLineV} />
-        <View
-          style={[
-            styles.joystickKnob,
-            { transform: [{ translateX: knobOffset.x }, { translateY: knobOffset.y }] },
-          ]}
-        />
-      </View>
-      <Text style={styles.joystickHint}>Arrastrá para mover</Text>
-    </View>
-  );
-}
-
 function DirButton({ label, icon, onPress, disabled, loading }) {
   return (
     <TouchableOpacity
       style={[styles.dirBtn, disabled && styles.btnDisabled]}
       onPress={onPress}
       disabled={disabled || loading}
-      activeOpacity={0.7}
+      activeOpacity={0.6}
     >
       {loading ? (
-        <ActivityIndicator color="#00E5FF" size="small" />
+        <ActivityIndicator color="#1e6fd9" size="small" />
       ) : (
         <>
           <Text style={styles.dirBtnIcon}>{icon}</Text>
@@ -121,20 +46,24 @@ function DirButton({ label, icon, onPress, disabled, loading }) {
   );
 }
 
-function ActionButton({ label, icon, onPress, disabled, loading, color }) {
+function ActionButton({ label, icon, onPress, disabled, loading, color, bg }) {
   return (
     <TouchableOpacity
-      style={[styles.actionBtn, { borderColor: color || '#00E5FF' }, disabled && styles.btnDisabled]}
+      style={[
+        styles.actionBtn,
+        { borderColor: color || '#1e6fd9', backgroundColor: bg || '#f8f9fa' },
+        disabled && styles.btnDisabled
+      ]}
       onPress={onPress}
       disabled={disabled || loading}
-      activeOpacity={0.7}
+      activeOpacity={0.6}
     >
       {loading ? (
-        <ActivityIndicator color={color || '#00E5FF'} size="small" />
+        <ActivityIndicator color={color || '#1e6fd9'} size="small" />
       ) : (
         <>
-          <Text style={[styles.actionBtnIcon, { color: color || '#00E5FF' }]}>{icon}</Text>
-          <Text style={[styles.actionBtnLabel, { color: color || '#00E5FF' }]}>{label}</Text>
+          <Text style={[styles.actionBtnIcon, { color: color || '#1e6fd9' }]}>{icon}</Text>
+          <Text style={[styles.actionBtnLabel, { color: color || '#1e6fd9' }]}>{label}</Text>
         </>
       )}
     </TouchableOpacity>
@@ -159,7 +88,7 @@ export function MovementScreen() {
     setLoadingBtn(key);
     try {
       await apiFn();
-      
+
       if (key === 'standup') {
         try {
           await actionService.execute('balance_stand');
@@ -200,12 +129,12 @@ export function MovementScreen() {
   const handleJoystickRelease = () => {
     isJoystickActive.current = false;
     motionService.stop()
-      .catch(() => {});
+      .catch(() => { });
   };
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0A0E1A" />
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
 
       {/* Header */}
       <View style={styles.header}>
@@ -226,7 +155,7 @@ export function MovementScreen() {
 
           {/* Joystick */}
           <View style={styles.section}>
-            <Joystick onMove={handleMove} onRelease={handleJoystickRelease} disabled={!isConnected} />
+            <VirtualJoystick onMove={handleMove} onRelease={handleJoystickRelease} disabled={!isConnected} />
           </View>
 
           <View style={styles.divider} />
@@ -257,7 +186,7 @@ export function MovementScreen() {
                   activeOpacity={0.7}
                 >
                   {loadingBtn === 'stop'
-                    ? <ActivityIndicator color="#FF1744" size="small" />
+                    ? <ActivityIndicator color="#d93025" size="small" />
                     : <Text style={styles.stopCenterIcon}>⏹</Text>
                   }
                 </TouchableOpacity>
@@ -294,17 +223,17 @@ export function MovementScreen() {
             <Text style={styles.sectionTitle}>POSTURAS</Text>
             <View style={styles.actionsRow}>
               <ActionButton
-                label="Pararse" icon="🦿" color="#00E5FF"
+                label="Pararse" icon="🦿" color="#1e6fd9" bg="#f0f4fa"
                 disabled={!isConnected} loading={loadingBtn === 'standup'}
                 onPress={() => handleAction('standup', motionService.standup, 'Pararse')}
               />
               <ActionButton
-                label="Sentarse" icon="🪑" color="#B388FF"
+                label="Sentarse" icon="🪑" color="#e8a13a" bg="#fff5e6"
                 disabled={!isConnected} loading={loadingBtn === 'sitdown'}
                 onPress={() => handleAction('sitdown', motionService.sitdown, 'Sentarse')}
               />
               <ActionButton
-                label="Detener" icon="🛑" color="#FF1744"
+                label="Detener" icon="🛑" color="#d93025" bg="#ffebe6"
                 disabled={!isConnected} loading={loadingBtn === 'stop2'}
                 onPress={() => handleAction('stop2', motionService.stop, 'Detener')}
               />
@@ -319,82 +248,65 @@ export function MovementScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0E1A' },
+  container: { flex: 1, backgroundColor: '#ffffff' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12,
-    borderBottomWidth: 1, borderBottomColor: '#1C2340',
+    paddingHorizontal: 24, paddingTop: 20, paddingBottom: 16,
+    borderBottomWidth: 1, borderBottomColor: '#e0e0e0',
   },
-  headerTitle: { color: '#00E5FF', fontSize: 13, fontWeight: '700', letterSpacing: 2 },
+  headerTitle: { color: '#222', fontSize: 13, fontWeight: '800', letterSpacing: 3 },
   statusDot: { width: 10, height: 10, borderRadius: 5 },
   dotConnected: {
-    backgroundColor: '#00E676',
-    shadowColor: '#00E676', shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.9, shadowRadius: 6, elevation: 4,
+    backgroundColor: '#1e8e3e',
+    shadowColor: '#1e8e3e', shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5, shadowRadius: 4, elevation: 2,
   },
-  dotDisconnected: { backgroundColor: '#FF1744' },
+  dotDisconnected: { backgroundColor: '#d93025' },
 
   toast: {
     position: 'absolute', top: 70, alignSelf: 'center',
-    paddingHorizontal: 20, paddingVertical: 10, borderRadius: 24, zIndex: 999,
+    paddingHorizontal: 24, paddingVertical: 12, borderRadius: 30, zIndex: 999,
+    shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 6,
   },
-  toastSuccess: { backgroundColor: '#00E676' },
-  toastError: { backgroundColor: '#FF1744' },
-  toastText: { color: '#0A0E1A', fontWeight: '700', fontSize: 13 },
+  toastSuccess: { backgroundColor: '#1e8e3e' },
+  toastError: { backgroundColor: '#d93025' },
+  toastText: { color: '#ffffff', fontWeight: '800', fontSize: 13 },
 
-  disconnectedBox: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 },
-  disconnectedIcon: { fontSize: 48, marginBottom: 8 },
-  disconnectedText: { color: '#FFFFFF', fontSize: 18, fontWeight: '700' },
-  disconnectedSub: { color: '#4A5578', fontSize: 13, textAlign: 'center', paddingHorizontal: 40 },
+  disconnectedBox: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
+  disconnectedIcon: { fontSize: 56, marginBottom: 8 },
+  disconnectedText: { color: '#222', fontSize: 20, fontWeight: '800' },
+  disconnectedSub: { color: '#666', fontSize: 14, textAlign: 'center', paddingHorizontal: 40, lineHeight: 22 },
 
-  scrollContent: { paddingTop: 8, paddingHorizontal: 16 },
-  section: { paddingVertical: 16 },
-  sectionTitle: { color: '#4A5578', fontSize: 11, fontWeight: '700', letterSpacing: 2, marginBottom: 16 },
-  divider: { height: 1, backgroundColor: '#1C2340' },
+  scrollContent: { paddingTop: 8, paddingHorizontal: 20 },
+  section: { paddingVertical: 20 },
+  sectionTitle: { color: '#444', fontSize: 12, fontWeight: '800', letterSpacing: 2, marginBottom: 20, marginLeft: 4 },
+  divider: { height: 1, backgroundColor: '#e0e0e0', marginVertical: 8 },
 
-  joystickWrapper: { alignItems: 'center', gap: 10 },
-  joystickLabel: { color: '#4A5578', fontSize: 11, fontWeight: '700', letterSpacing: 2 },
-  joystickBase: {
-    width: JOYSTICK_RADIUS * 2, height: JOYSTICK_RADIUS * 2, borderRadius: JOYSTICK_RADIUS,
-    backgroundColor: '#111827', borderWidth: 2, borderColor: '#1C2340',
-    alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#00E5FF', shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.15, shadowRadius: 12, elevation: 4,
-  },
-  joystickLineH: { position: 'absolute', width: '80%', height: 1, backgroundColor: '#1C2340' },
-  joystickLineV: { position: 'absolute', height: '80%', width: 1, backgroundColor: '#1C2340' },
-  joystickKnob: {
-    width: KNOB_RADIUS * 2, height: KNOB_RADIUS * 2, borderRadius: KNOB_RADIUS,
-    backgroundColor: '#00E5FF',
-    shadowColor: '#00E5FF', shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6, shadowRadius: 10, elevation: 6,
-  },
-  joystickHint: { color: '#2A3356', fontSize: 11 },
-  disabledOverlay: { opacity: 0.3 },
-
-  dpadContainer: { alignItems: 'center', gap: 8 },
-  dpadRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  dpadContainer: { alignItems: 'center', gap: 10 },
+  dpadRow: { flexDirection: 'row', gap: 10, alignItems: 'center' },
   dpadEmpty: { width: 72, height: 72 },
   dirBtn: {
-    width: 72, height: 72, borderRadius: 12,
-    backgroundColor: '#111827', borderWidth: 1, borderColor: '#1C2340',
-    alignItems: 'center', justifyContent: 'center', gap: 4,
+    width: 72, height: 72, borderRadius: 24,
+    backgroundColor: '#f8f9fa', borderWidth: 1, borderColor: '#e0e0e0',
+    alignItems: 'center', justifyContent: 'center', gap: 6,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
-  dirBtnIcon: { color: '#00E5FF', fontSize: 20 },
-  dirBtnLabel: { color: '#4A5578', fontSize: 10, fontWeight: '600' },
+  dirBtnIcon: { color: '#444', fontSize: 22 },
+  dirBtnLabel: { color: '#666', fontSize: 9, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
   stopCenterBtn: {
-    width: 72, height: 72, borderRadius: 12,
-    backgroundColor: '#1A0810', borderWidth: 1, borderColor: '#FF1744',
+    width: 76, height: 76, borderRadius: 38,
+    backgroundColor: '#ffebe6', borderWidth: 1, borderColor: '#d93025',
     alignItems: 'center', justifyContent: 'center',
+    shadowColor: '#d93025', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 6, elevation: 3,
   },
-  stopCenterIcon: { fontSize: 28 },
-  btnDisabled: { opacity: 0.35 },
+  stopCenterIcon: { fontSize: 32, color: '#d93025' },
+  btnDisabled: { opacity: 0.4 },
 
-  actionsRow: { flexDirection: 'row', gap: 12, justifyContent: 'center' },
+  actionsRow: { flexDirection: 'row', gap: 16, justifyContent: 'center' },
   actionBtn: {
-    flex: 1, paddingVertical: 16, borderRadius: 12,
-    backgroundColor: '#111827', borderWidth: 1, alignItems: 'center', gap: 6,
+    flex: 1, paddingVertical: 20, borderRadius: 24,
+    borderWidth: 1, alignItems: 'center', gap: 8,
   },
-  actionBtnIcon: { fontSize: 24 },
-  actionBtnLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 1 },
+  actionBtnIcon: { fontSize: 28 },
+  actionBtnLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 1.2, textTransform: 'uppercase' },
 });
